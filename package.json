@@ -1,0 +1,23 @@
+{
+  "name": "sourcefeed",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "bsb -make-world",
+    "watch": "bsb -make-world -w",
+    "start": "nodemon src/App.bs.js",
+    "clean": "bsb -clean-world"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "bs-platform": "3.0.0",
+    "nodemon": "^1.17.3"
+  },
+  "dependencies": {
+    "bs-express": "^0.7.0",
+    "bs-node": "github:reasonml-community/bs-node"
+  }
+}
