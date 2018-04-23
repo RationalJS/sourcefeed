@@ -12,7 +12,7 @@ let wait = (ms, f) => Task.make(resolve =>
 let auth = (r) => {
   let _state = r.ctx.signed_out;
   let ctx = { signed_in: true, user: "alice" };
-  wait(2000, () => pass({ ...r, ctx })) |> async
+  wait(1000, () => pass({ ...r, ctx })) |> async
 };
 
 
