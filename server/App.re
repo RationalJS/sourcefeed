@@ -12,9 +12,15 @@ let wait = (ms, f) => Task.make(resolve =>
 let auth = (r) => {
   let _state = r.ctx.signed_out;
   let ctx = { signed_in: true, user: "alice" };
-  wait(1000, () => pass({ ...r, ctx })) |> async
+  if ( 1 == 2 ) {
+    pass({ ...r, ctx })
+  }
+  else {
+    r
+    |> status(401)
+    |> send_json({ "reason": "not_signed_in" })
+  }
 };
-
 
 let routes
 = get("/")
@@ -30,8 +36,9 @@ let routes
     Js.log("Found user: " ++ user);
     pass(r)
   })
-  &&& (r =>
-    send_json(r, 200, { "username": r.ctx.user })
+  &&& (r => r
+    |> status(200)
+    |> send_json({ "username": r.ctx.user })
   )
 ;
 

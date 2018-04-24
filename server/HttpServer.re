@@ -29,11 +29,6 @@ module RawHttp = {
   external http : http = ""
 };
 
-let print_res = (res) => Routes.(switch(res) {
-  | Ok_200(content) => "[200: " ++ Belt.Option.getWithDefault(content, "") ++ "]"
-  | Redirect_302(url) => "[302: " ++ url ++ "]"
-  | Error_500(err) => "[500: " ++ err ++ "]"
-});
 let print_handler_action = (a) => Routes.(switch(a) {
   | Pass(_) => "Pass"
   | Fail => "Fail"
@@ -47,7 +42,7 @@ let makeReq = (raw_req : RawHttp.req) => {
   method: raw_req##_method,
 };
 
-let makeRes = () => Routes.(Res(emptyHeaders(), Ok_200(None)));
+let makeRes = () => Routes.ResFresh(Routes.emptyHeaders());
 
 let makeRouteContext = (raw_req, ctx) => {
   Routes.req: makeReq(raw_req),
@@ -59,12 +54,12 @@ let makeRouteContext = (raw_req, ctx) => {
 let create = (ctx, routes) =>
   RawHttp.http##createServer( (. req, res) => {
     Js.log(req##_method ++ " " ++ req##url);
-    let plan : Routes.handler_action(Routes.endpoint, 'a)
+    let plan : Routes.handler_action(Routes.endpoint, 'inital_ctx, Routes.fresh, Routes.complete)
              = routes(makeRouteContext(req, ctx));
     let rec execute = Routes.((p) =>
       switch (p) {
-        | Halt({ res: Res(headers,Ok_200(body)) }) =>
-          res##writeHead(200, headers);
+        | Halt({ res: ResEnded(status_code, headers, body) }) =>
+          res##writeHead(status_code, headers);
           switch(body) {
             | Some(content) => res##_end(content)
             | None => res##_end("")

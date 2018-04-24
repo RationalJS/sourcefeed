@@ -11,27 +11,45 @@ type req = {
   method: string,
   url: string
 };
-type res_type =
-  | Ok_200(option(string))
-  | Redirect_302(string)
-  | Error_500(string);
 
-type res = Res(headers, res_type);
+type fresh;
+type headers_sent;
+type complete;
 
-type route_context('a) = {
+type res_body = option(string);
+type res(_) =
+  | ResFresh(headers) : res(fresh)
+  | ResHeadersSent(int, headers) : res(headers_sent)
+  | ResEnded(int, headers, res_body) : res(complete);
+
+type route_context('a, 'res_status) = {
   req: req,
-  res: res,
+  res: res('res_status),
   ctx: 'a,
   matched: string, /* The amount of the url matched so far */
 };
 
-[@bs.deriving accessors]
-type handler_action('same, 'change) =
-  | Pass(route_context('change))
-  | Halt(route_context('same))
+/* TODO: Add feature to send headers early */
+type handler_action('same, 'change, 's1, 's2) =
+  | Pass(route_context('change, 's2))
+  | Halt(route_context('same, complete))
   | Fail
-  | Async(Task.t(handler_action('same, 'change)))
+  | Async(Task.t(handler_action('same, 'change, 's1, 's2)))
 ;
+
+type handler('a,'b,'s1,'s2) = route_context('a,'s1) => handler_action('a,'b,'s1,'s2);
+
+let pass = (r) => Pass(r);
+let async = (task) => Async(task);
+
+let status = (code, r) => {
+  let ResFresh(headers) = r.res;
+  {
+    ...r,
+    res: ResHeadersSent(code, headers)
+  }
+};
+
 
 let chain = (e1, e2) => (r1) =>
   switch(e1(r1)) {
@@ -80,24 +98,23 @@ let find = (e1, e2) => (r1) =>
 let (|||) = find;
 
 
-let get = (path) => (route) =>
-  route.req.method == "GET" && route.req.url == path
-  ? Pass({ ...route, matched: path })
+let get = (path) => (r : route_context('a, fresh)) =>
+  r.req.method == "GET" && r.req.url == path
+  ? Pass({ ...r, matched: path })
   : Fail;
 
-let send_json = (r, code, content) => switch(code, r.res) {
-  | (200, Res(headers, _)) =>
-    Halt({
-      ...r,
-      ctx: endpoint,
-      res: Res(headers, Ok_200(content |> Js.Json.stringifyAny))
-    })
-  | _ => raise(ServerError("Invalid status code: " ++ string_of_int(code)))
+let send_json = (content, r) => {
+  let ResHeadersSent(code, headers) = r.res;
+  Halt({
+    ...r,
+    ctx: endpoint,
+    res: ResEnded(code, headers, content |> Js.Json.stringifyAny)
+  })
 };
 
 let literal = (content) => (r) =>
   Halt({
     ...r,
     ctx: endpoint,
-    res: Res(emptyHeaders(), Ok_200(content |> Js.Json.stringifyAny))
+    res: ResEnded(200, emptyHeaders(), content |> Js.Json.stringifyAny)
   });
