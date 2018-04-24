@@ -16,6 +16,8 @@ type fresh;
 type headers_sent;
 type complete;
 
+type fresh_ctx = Js.t({. });
+
 type res_body = option(string);
 type res(_) =
   | ResFresh(headers) : res(fresh)
@@ -39,8 +41,19 @@ type handler_action('same, 'change, 's1, 's2) =
 
 type handler('a,'b,'s1,'s2) = route_context('a,'s1) => handler_action('a,'b,'s1,'s2);
 
-let pass = (r) => Pass(r);
+let route = (r : route_context(fresh_ctx,fresh)) => Pass(r);
+
+let next = (r) => Pass(r);
+let next_assign = (r, obj) => Pass({
+  ...r,
+  ctx: Js.Obj.assign(r.ctx, obj)
+});
+
 let async = (task) => Async(task);
+let check = (f) => (r) => {
+  f(r.ctx) |> ignore;
+  Pass(r)
+};
 
 let status = (code, r) => {
   let ResFresh(headers) = r.res;

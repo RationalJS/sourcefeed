@@ -44,18 +44,18 @@ let makeReq = (raw_req : RawHttp.req) => {
 
 let makeRes = () => Routes.ResFresh(Routes.emptyHeaders());
 
-let makeRouteContext = (raw_req, ctx) => {
+let makeRouteContext = (raw_req) => {
   Routes.req: makeReq(raw_req),
   res: makeRes(),
-  ctx: ctx,
+  ctx: (Js.Obj.empty() : Routes.fresh_ctx),
   matched: "",
 };
 
-let create = (ctx, routes) =>
+let create = (routes) =>
   RawHttp.http##createServer( (. req, res) => {
     Js.log(req##_method ++ " " ++ req##url);
     let plan : Routes.handler_action(Routes.endpoint, 'inital_ctx, Routes.fresh, Routes.complete)
-             = routes(makeRouteContext(req, ctx));
+             = routes(makeRouteContext(req));
     let rec execute = Routes.((p) =>
       switch (p) {
         | Halt({ res: ResEnded(status_code, headers, body) }) =>
