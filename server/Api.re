@@ -1,12 +1,8 @@
 open Routes;
+open Routes.Middleware;
 module Dict = Js.Dict;
 module Re = Js.Re;
 module Option = Belt.Option;
-
-
-let parseCookie = (r) => next_assign(r, {
-  "cookies": Dict.fromList([ ("Authentication", "Bearer xyz") ])
-});
 
 
 let bearerRe = [%re "/^Bearer (.*)$/"];

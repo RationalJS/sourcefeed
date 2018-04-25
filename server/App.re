@@ -1,4 +1,6 @@
 open Routes;
+open Routes.Router;
+open Routes.Middleware;
 
 let routes =
 route
@@ -10,7 +12,7 @@ route
 
 ||| route
 &&& get("/me")
-&&& Api.parseCookie
+&&& AeroCookie.m
 &&& Api.auth
 &&& (r => {
   Js.log("Found user: " ++ r.ctx##user);
