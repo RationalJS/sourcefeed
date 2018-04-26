@@ -108,7 +108,8 @@ module Middleware = {
   let next = (r) => Pass(r);
   let next_assign = (r, obj) => Pass({
     ...r,
-    ctx: Js.Obj.assign(r.ctx, obj)
+    /* Object.assign mutates, so copy before merging. */
+    ctx: Js.Obj.(empty() |. assign(r.ctx) |. assign(obj))
   });
 
   let async = (task) => Async(task);
