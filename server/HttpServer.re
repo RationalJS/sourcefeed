@@ -54,8 +54,9 @@ let makeRouteContext = (raw_req) => {
 let create = (routes) =>
   RawHttp.http##createServer( (. req, res) => {
     Js.log(req##_method ++ " " ++ req##url);
-    let plan : Routes.handler_action(Routes.endpoint, 'inital_ctx, Routes.fresh, Routes.complete)
-             = routes(makeRouteContext(req));
+    let plan =
+      (routes(makeRouteContext(req))
+        : Routes.handler_action(Routes.endpoint, Js.t({.}), Routes.fresh, Routes.complete) );
     let rec execute = Routes.((p) =>
       switch (p) {
         | Halt({ res: ResEnded(status_code, headers, body) }) =>
@@ -68,7 +69,7 @@ let create = (routes) =>
           res##writeHead(404, emptyHeaders());
           res##_end("No such route: " ++ req##_method ++ " " ++ req##url)
         | Async(task) =>
-          task |> Task.run(execute)
+          task |> Task.run(execute) |> ignore
         | other =>
           res##writeHead(500, emptyHeaders());
           Js.log("Invalid response: " ++ print_handler_action(other));

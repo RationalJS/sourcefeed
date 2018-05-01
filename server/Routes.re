@@ -36,7 +36,7 @@ type handler_action('same, 'change, 's1, 's2) =
   | Pass(route_context('change, 's2))
   | Halt(route_context('same, complete))
   | Fail
-  | Async(Task.t(handler_action('same, 'change, 's1, 's2)))
+  | Async(Task.t(handler_action('same, 'change, 's1, 's2), Task.ready))
 ;
 
 type handler('a,'b,'s1,'s2) = route_context('a,'s1) => handler_action('a,'b,'s1,'s2);

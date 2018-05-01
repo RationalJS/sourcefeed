@@ -3,6 +3,8 @@ open BsOspec;
 
 exception AssertionError(string);
 
+let stringify = (value) => Js.Json.stringifyAny(value) |> Belt.Option.getExn;
+
 let makeReq = (~headers=Js.Dict.empty(), _method, url) =>
   HttpServer.makeRouteContext({
     "headers": headers,
@@ -10,18 +12,18 @@ let makeReq = (~headers=Js.Dict.empty(), _method, url) =>
     "_method": _method,
   });
 
-let rec execute = Routes.((callback, p) =>
+let rec getRes = (callback, p) =>
   switch (p) {
-    | Async(task) =>
-      task |> Task.run(execute(callback))
+    | Routes.Async(task) =>
+      task |> Task.run(getRes(callback)) |> ignore
     | other => callback(other)
   }
-);
+;
 
 let expectJson = (expected, actual) => switch(actual) {
   | Halt({ res: ResEnded(_, _, body) }) => switch(body) {
       | Some(body) =>
-        body |> deepEquals(expected |> Js.Json.stringifyAny |> Belt.Option.getExn)
+        body |> deepEquals(expected |> stringify)
       | None =>
         raise(AssertionError("Response did not send a body"))
     }

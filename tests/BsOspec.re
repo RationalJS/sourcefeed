@@ -4,19 +4,30 @@ external describe : (string, (unit => unit)) => unit = "spec";
 
 
 [@bs.module]
-external test : (string, (unit => unit)) => unit = "ospec";
+external test : (string, (unit => 'a)) => unit = "ospec";
 [@bs.module]
-external testAsync : (string, (unit => unit) => unit) => unit = "ospec";
+external testAsync : (string, (unit => unit) => 'a) => unit = "ospec";
 [@bs.module]
-external testAsyncLong : (string, (unit => unit, int => unit) => unit) => unit = "ospec";
+external testAsyncLong : (string, (unit => unit, int => unit) => 'a) => unit = "ospec";
 
 
 [@bs.module "ospec"]
 external testOnly : (string, (unit => unit)) => unit = "only";
 [@bs.module "ospec"]
-external testAsyncOnly : (string, (unit => unit) => unit) => unit = "only";
+external testAsyncOnly : (string, (unit => unit) => 'a) => unit = "only";
 [@bs.module "ospec"]
-external testAsyncLongOnly : (string, (unit => unit) => unit) => unit = "only";
+external testAsyncLongOnly : (string, (unit => unit, int => unit) => 'a) => unit = "only";
+
+
+[@bs.module "ospec"]
+external beforeEach : (unit => 'a) => unit = "";
+[@bs.module "ospec"]
+external afterEach : (unit => 'a) => unit = "";
+
+[@bs.module "ospec"]
+external beforeEachAsync : (('a => unit) => 'b) => unit = "beforeEach";
+[@bs.module "ospec"]
+external afterEachAsync : (('a => unit) => 'b) => unit = "afterEach";
 
 
 type checker('a) = {

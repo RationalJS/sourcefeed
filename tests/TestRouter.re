@@ -12,7 +12,7 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/hello")
     |> router
-    |> execute( expectJson("hi") );
+    |> getRes( expectJson("hi") );
   });
 
   test("multiple routes", () => {
@@ -22,11 +22,11 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/one")
     |> router
-    |> execute( expectJson(10) );
+    |> getRes( expectJson(10) );
 
     makeReq("GET", "/two")
     |> router
-    |> execute( expectJson(20) );
+    |> getRes( expectJson(20) );
   });
 
   testAsync("async route", finished => {
@@ -37,7 +37,7 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/hello")
     |> router
-    |> execute( expectJson("hi") >>% finished );
+    |> getRes( expectJson("hi") >>% finished );
   });
 
   testAsync("double async route", finished => {
@@ -51,7 +51,7 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/goodbye")
     |> router
-    |> execute( expectJson("bye") >>% finished );
+    |> getRes( expectJson("bye") >>% finished );
   });
 
   test("middleware adding to context", () => {
@@ -64,7 +64,7 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/")
     |> router
-    |> execute( expectJson(10) );
+    |> getRes( expectJson(10) );
   });
 
 })

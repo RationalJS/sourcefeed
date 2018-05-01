@@ -14,11 +14,13 @@
   "license": "MIT",
   "devDependencies": {
     "bs-platform": "3.0.0",
+    "mock-http-server": "github:sourcefeed-io/node-mock-http-server#be3e3a26",
     "nodemon": "^1.17.3",
     "ospec": "^1.4.0"
   },
   "dependencies": {
     "bs-node": "github:reasonml-community/bs-node",
-    "cookie": "^0.3.1"
+    "cookie": "^0.3.1",
+    "follow-redirects": "^1.4.1"
   }
 }

@@ -19,7 +19,7 @@ describe("AeroCookie", () => {
       ~headers=Js.Dict.fromList([("cookie", "my-cookie=yum!")]),
       "GET", "/hello")
     |> router
-    |> execute( expectJson({ "c": "yum!" }) );
+    |> getRes( expectJson({ "c": "yum!" }) );
   });
 
 });
