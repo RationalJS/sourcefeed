@@ -13,6 +13,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "bs-ospec": "^0.1.0",
     "bs-platform": "3.0.0",
     "mock-http-server": "github:sourcefeed-io/node-mock-http-server#be3e3a26",
     "nodemon": "^1.17.3",

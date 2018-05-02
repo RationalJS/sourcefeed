@@ -16,7 +16,8 @@
   },
   "suffix": ".bs.js",
   "bs-dependencies": [
-    "bs-node"
+    "bs-node",
+    "bs-ospec" // bs-dev-dependencies doesn't work currently
   ],
   "warnings": {
     "error" : "+101"
