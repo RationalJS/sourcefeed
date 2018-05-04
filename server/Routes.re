@@ -36,7 +36,7 @@ type handler_action('same, 'change, 's1, 's2) =
   | Pass(route_context('change, 's2))
   | Halt(route_context('same, complete))
   | Fail
-  | Async(Task.t(handler_action('same, 'change, 's1, 's2), Task.ready))
+  | Async(Future.t(handler_action('same, 'change, 's1, 's2)))
 ;
 
 type handler('a,'b,'s1,'s2) = route_context('a,'s1) => handler_action('a,'b,'s1,'s2);
@@ -49,21 +49,21 @@ module Router = {
       | Pass(r2) => e2(r2)
       | Halt(r2) => Halt(r2)
       | Fail => Fail
-      | Async(task) =>
+      | Async(future) =>
         let rec handle = (action) => switch(action) {
           | Pass(r2) => e2(r2)
           | Halt(r2) => Halt(r2)
           | Fail => Fail
           /*
-           * Recursively "unwrap" async task results.
+           * Recursively "unwrap" async future results.
            * This is here so OCaml types the function correctly,
            * but it also allows middleware to directly use other middleware!
            */
-          | Async(task2) => Async(task2 |> Task.map(handle))
+          | Async(future2) => Async(future2 |> Future.map(handle))
         };
-        task
-        |> Task.map(handle)
-        |> (task => Async(task))
+        future
+        |> Future.map(handle)
+        |> (future => Async(future))
     };
   let (&&&) = chain;
 
@@ -72,21 +72,21 @@ module Router = {
       | Pass(r2) => Pass(r2)
       | Halt(r2) => Halt(r2)
       | Fail => e2(r1)
-      | Async(task) =>
+      | Async(future) =>
         let rec handle = (action) => switch(action) {
           | Pass(r2) => Pass(r2)
           | Halt(r2) => Halt(r2)
           | Fail => e2(r1)
           /*
-           * Recursively "unwrap" async task results.
+           * Recursively "unwrap" async future results.
            * This is here so OCaml types the function correctly,
            * but it also allows middleware to directly use other middleware!
            */
-          | Async(task2) => Async(task2 |> Task.map(handle))
+          | Async(future2) => Async(future2 |> Future.map(handle))
         };
-        task
-        |> Task.map(handle)
-        |> (task => Async(task))
+        future
+        |> Future.map(handle)
+        |> (future => Async(future))
     };
   let (|||) = find;
 
@@ -112,7 +112,7 @@ module Middleware = {
     ctx: Js.Obj.(empty() |. assign(r.ctx) |. assign(obj))
   });
 
-  let async = (task) => Async(task);
+  let async = (future) => Async(future);
 
   let status = (code, r) => {
     let ResFresh(headers) = r.res;

@@ -68,8 +68,8 @@ let create = (routes) =>
         | Fail =>
           res##writeHead(404, emptyHeaders());
           res##_end("No such route: " ++ req##_method ++ " " ++ req##url)
-        | Async(task) =>
-          task |> Task.run(execute) |> ignore
+        | Async(future) =>
+          future |> Future.get(execute)
         | other =>
           res##writeHead(500, emptyHeaders());
           Js.log("Invalid response: " ++ print_handler_action(other));

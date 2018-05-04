@@ -14,8 +14,8 @@ let makeReq = (~headers=Js.Dict.empty(), _method, url) =>
 
 let rec getRes = (callback, p) =>
   switch (p) {
-    | Routes.Async(task) =>
-      task |> Task.run(getRes(callback)) |> ignore
+    | Routes.Async(future) =>
+      future |> Future.get(getRes(callback))
     | other => callback(other)
   }
 ;
@@ -33,7 +33,7 @@ let expectJson = (expected, actual) => switch(actual) {
 
 type timeoutId;
 [@bs.val] [@bs.val] external setTimeout : ([@bs.uncurry] (unit => unit), int) => timeoutId = "";
-let delay = (ms, f) => Task.make(resolve =>
+let delay = (ms, f) => Future.make(resolve =>
   setTimeout(() => f() |> resolve, ms) |> ignore
 );
 

@@ -74,7 +74,7 @@ let go = (resolve) => (res) => {
     })
 };
 
-let task = (opts) => {
+let run = (opts) => {
   let parts = opts.url |> NodeUrl.parseExn;
   let isHttps = parts##protocol == "https:";
 
@@ -86,7 +86,7 @@ let task = (opts) => {
     ~headers=opts.headers,
     ()
   );
-  Task.make(resolve => {
+  Future.make(resolve => {
     let req = isHttps
       ? NodeExtHttp.requestHttps(node_req_opts, ~callback=go(resolve), ())
       : NodeExtHttp.request(node_req_opts, ~callback=go(resolve), ())

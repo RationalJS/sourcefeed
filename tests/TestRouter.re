@@ -29,7 +29,7 @@ describe("Basic route matching", () => {
     |> getRes( expectJson(20) );
   });
 
-  testAsync("async route", finished => {
+  testAsync("async route", done_ => {
     let slowLiteral = (x) => (r) =>
       async @@ delay(50, () => r |> literal(x));
 
@@ -37,10 +37,10 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/hello")
     |> router
-    |> getRes( expectJson("hi") >>% finished );
+    |> getRes( expectJson("hi") >>% done_ );
   });
 
-  testAsync("double async route", finished => {
+  testAsync("double async route", done_ => {
     let pause = (r) => {
       delay(50, () => next(r)) |> async;
     };
@@ -51,7 +51,7 @@ describe("Basic route matching", () => {
 
     makeReq("GET", "/goodbye")
     |> router
-    |> getRes( expectJson("bye") >>% finished );
+    |> getRes( expectJson("bye") >>% done_ );
   });
 
   test("middleware adding to context", () => {
