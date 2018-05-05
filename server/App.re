@@ -1,4 +1,3 @@
-open Routes;
 open Routes.Router;
 open Routes.Middleware;
 

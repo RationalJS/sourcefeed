@@ -48,17 +48,7 @@ let header = (k, v, opts) => {
   opts.headers |> Js.Dict.set(_, k, v);
   opts
 };
-/*
-let body = (bodyt, opts) => switch(bodyt) {
-  | Json(obj) => switch(obj |> Js.Json.stringifyAny) {
-      | Some(content) => bodyJson(content, opts)
-      | None => raise(RequestError("Invalid object; could not convert to json."))
-    }
-  | JsonRaw(content) => bodyJson(content, opts)
-  | UrlEncoded(obj) => NodeQueryString.stringify(obj) |> urlEncoded(_, opts)
-  | UrlEncodedRaw(string) => urlEncoded(string, opts)
-  | PlainText(string) => plainText(string, opts)
-};*/
+
 let headers = (hs, opts) => { ...opts, headers: hs };
 let timeout = (ms, opts) => { ...opts, timeout: Some(ms) };
 
