@@ -28,6 +28,6 @@ let auth = (r) => {
     | None =>
       r
       |> status(401)
-      |> send_json({ "reason": "not_signed_in" })
+      |> sendJson({ "reason": "not_signed_in" })
   }
 };

@@ -1,31 +1,21 @@
+open BsNode;
 open Routes.Router;
 open Routes.Middleware;
 
+let getPath = NodePath.join2(NodeGlobal.__dirname);
+
 let routes =
 route
-&&& get("/")
-&&& literal("hello")
+&&& prefix("/assets")
+&&& AeroStatic.dir("../client/build" |> getPath)
 
 ||| route
-&&& get("/about") &&& literal({ "name": "alice" })
-
-||| route
-&&& get("/me")
-&&& AeroCookie.m
-&&& Api.auth
-&&& (r => {
-  Js.log("Found user: " ++ r.ctx##user);
-  next(r)
-})
-&&& (r => r
-  |> status(200)
-  |> send_json({ "username": r.ctx##user })
-);
+&&& get("/") &&& AeroStatic.file("../client/index.html" |> getPath);
 
 let port = 3737;
 let hostname = "127.0.0.1";
-let server = HttpServer.create(routes);
 
-server##listen(port, hostname, () => {
+HttpServer.create(routes)
+|> HttpServer.listen(port, hostname, () => {
   Js.log("Listening on port " ++ string_of_int(port))
 });

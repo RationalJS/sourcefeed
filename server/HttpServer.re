@@ -1,3 +1,6 @@
+module Req = NodeExtHttp.IncomingMessage;
+module Res = NodeExtHttp.ServerResponse;
+module WS = NodeExtHttp.NodeExtStream.WritableStream;
 
 module RawHttp = {
   type req = Js.t({.
@@ -31,15 +34,16 @@ module RawHttp = {
 
 let print_handler_action = (a) => Routes.(switch(a) {
   | Pass(_) => "Pass"
+  | SendHeaders(_) => "SendHeaders"
   | Fail => "Fail"
   | Halt(_) => "Halt"
   | Async(_) => "Async"
 });
 
-let makeReq = (raw_req : RawHttp.req) => {
-  Routes.headers: raw_req##headers,
-  url: raw_req##url,
-  method: raw_req##_method,
+let makeReq = (raw_req) => {
+  Routes.headers: raw_req |> Req.getHeaders,
+  url: raw_req |> Req.getUrl,
+  method: raw_req |> Req.getMethod,
 };
 
 let makeRes = () => Routes.ResFresh(Routes.emptyHeaders());
@@ -48,33 +52,56 @@ let makeRouteContext = (raw_req) => {
   Routes.req: makeReq(raw_req),
   res: makeRes(),
   ctx: (Js.Obj.empty() : Routes.fresh_ctx),
-  matched: "",
+  urlMatched: "",
+};
+
+/* Useful for testing */
+let makeRouteContextLiteral = (method_, url, headers) => {
+  Routes.req: { method: method_, url, headers },
+  res: makeRes(),
+  ctx: (Js.Obj.empty() : Routes.fresh_ctx),
+  urlMatched: "",
 };
 
 let create = (routes) =>
-  RawHttp.http##createServer( (. req, res) => {
-    Js.log(req##_method ++ " " ++ req##url);
+  NodeExtHttp.createServer( (req, res) => {
+    Js.log(Req.getMethod(req) ++ " " ++ Req.getUrl(req));
     let plan =
       (routes(makeRouteContext(req))
-        : Routes.handler_action(Routes.endpoint, Js.t({.}), Routes.fresh, Routes.complete) );
+        : Routes.handler_action(Routes.endpoint, Js.t({.}), Routes.fresh, Routes.completed) );
     let rec execute = Routes.((p) =>
       switch (p) {
-        | Halt({ res: ResEnded(status_code, headers, body) }) =>
-          res##writeHead(status_code, headers);
+        | Halt({ res: ResEnded(headersSent, status_code, headers, body) }) =>
+          if ( ! headersSent ) {
+            res
+            |. Res.writeHead(~status=status_code, ~headers=headers, ());
+          };
           switch(body) {
-            | Some(content) => res##_end(content)
-            | None => res##_end("")
-          }
+            | Some(content) => res |. WS.writeString(~data=content, ()) |> ignore
+            | None => ()
+          };
+          res |. WS.endStream
+        | Halt({ res: ReqResStream(stream) }) =>
+          req
+          |. NodeExtHttp.NodeExtStream.ReadableStream.pipe(stream)
+          |. NodeExtHttp.NodeExtStream.ReadableStream.pipe(res)
+          |> ignore
         | Fail =>
-          res##writeHead(404, emptyHeaders());
-          res##_end("No such route: " ++ req##_method ++ " " ++ req##url)
+          res |. Res.writeHead(~status=404, ~headers=emptyHeaders(), ());
+          res |. WS.writeString("No such route: " ++ Req.getMethod(req) ++ " " ++ Req.getUrl(req), ());
+          res |. WS.endStream
+        /*| Async(SendHeaders) => TODO */
         | Async(future) =>
           future |> Future.get(execute)
         | other =>
-          res##writeHead(500, emptyHeaders());
+          res |. Res.writeHead(~status=500, ~headers=emptyHeaders(), ());
           Js.log("Invalid response: " ++ print_handler_action(other));
-          res##_end("Server error")
+          res |. WS.writeString("Internal server error", ());
+          res |. WS.endStream
       }
     );
     execute(plan)
   });
+
+let listen = (port, host, callback, server) =>
+  server |. NodeExtHttp.NodeExtNet.Server.listenTCP(~port, ~host, ~callback, ())

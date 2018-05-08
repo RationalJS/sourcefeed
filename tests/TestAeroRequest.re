@@ -1,4 +1,4 @@
-open BsOspec;
+open BsOspec.Esm;
 open AeroResult;
 module MockServer = BsNodeMockHttpServer;
 

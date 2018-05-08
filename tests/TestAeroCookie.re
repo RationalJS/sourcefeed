@@ -1,4 +1,4 @@
-open BsOspec;
+open BsOspec.Esm;
 open Routes;
 open Routes.Router;
 open Routes.Middleware;
@@ -12,7 +12,7 @@ describe("AeroCookie", () => {
       &&& get("/hello")
       &&& AeroCookie.m
       &&& (r => r |>
-        send_json'(200, { "c": r.ctx##cookies |> Js.Dict.unsafeGet(_, "my-cookie") })
+        sendJson'(200, { "c": r.ctx##cookies |> Js.Dict.unsafeGet(_, "my-cookie") })
       );
 
     makeReq(

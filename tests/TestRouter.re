@@ -1,4 +1,4 @@
-open BsOspec;
+open BsOspec.Esm;
 open Routes;
 open Routes.Router;
 open Routes.Middleware;
@@ -60,7 +60,7 @@ describe("Basic route matching", () => {
     let router = route
       &&& get("/")
       &&& yield_x
-      &&& (r => r |> send_json'(200,r.ctx##x));
+      &&& (r => r |> sendJson'(200,r.ctx##x));
 
     makeReq("GET", "/")
     |> router

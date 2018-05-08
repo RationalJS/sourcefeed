@@ -6,9 +6,9 @@ type server_options = { .
   "port": int,
 };
 
-[@bs.module]
+[@bs.module "mock-http-server"]
 [@bs.new]
-external _make : (server_options) => server = "mock-http-server";
+external _make : (server_options) => server = "default";
 
 let make = (~host="localhost", port : int) =>
   _make({ "host": host, "port": port });

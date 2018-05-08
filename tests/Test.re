@@ -1,16 +1,12 @@
 open Routes;
-open BsOspec;
+open BsOspec.Esm;
 
 exception AssertionError(string);
 
 let stringify = (value) => Js.Json.stringifyAny(value) |> Belt.Option.getExn;
 
-let makeReq = (~headers=Js.Dict.empty(), _method, url) =>
-  HttpServer.makeRouteContext({
-    "headers": headers,
-    "url": url,
-    "_method": _method,
-  });
+let makeReq = (~headers=Js.Dict.empty(), method_, url) =>
+  HttpServer.makeRouteContextLiteral(method_, url, headers);
 
 let rec getRes = (callback, p) =>
   switch (p) {
@@ -21,11 +17,24 @@ let rec getRes = (callback, p) =>
 ;
 
 let expectJson = (expected, actual) => switch(actual) {
-  | Halt({ res: ResEnded(_, _, body) }) => switch(body) {
+  | Halt({ res: ResEnded(_,_,_,body) }) => switch(body) {
       | Some(body) =>
         body |> deepEquals(expected |> stringify)
       | None =>
         raise(AssertionError("Response did not send a body"))
+    }
+  | _ =>
+    raise(AssertionError("Response did not end"))
+};
+
+let expectHtml = (expected, actual) => switch(actual) {
+  | Halt({ res: ResEnded(_,_, headers, body) }) =>
+    headers |> Js.Dict.unsafeGet(_, "content-type") |> equals("text/html");
+    switch(body) {
+      | Some(body) =>
+        body |> equals(expected)
+      | None =>
+        raise(AssertionError("Response did not send an html body"))
     }
   | _ =>
     raise(AssertionError("Response did not end"))

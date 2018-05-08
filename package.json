@@ -2,9 +2,11 @@
   "name": "sourcefeed",
   "version": "0.1.0",
   "scripts": {
+    "test": "ospec --require esm",
     "build": "bsb -make-world",
     "watch": "bsb -make-world -w",
-    "start": "nodemon server/App.bs.js",
+    "watch-server": "nodemon --ignore client/ --ignore lib/ server/index.js",
+    "dev": "concurrently --kill-others --names=\"bundle,server\" \"./bundle.sh --watch\" \"npm run watch-server\"",
     "clean": "bsb -clean-world"
   },
   "keywords": [
@@ -13,16 +15,26 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "bs-ospec": "^0.2.1",
+    "bs-ospec": "^0.3.0",
     "bs-platform": "3.0.0",
+    "concurrently": "^3.5.1",
+    "glob": "^7.1.2",
     "mock-http-server": "github:sourcefeed-io/node-mock-http-server#be3e3a26",
     "nodemon": "^1.17.3",
-    "ospec": "^1.4.1"
+    "ospec": "^1.4.1",
+    "wait-on": "^2.1.0"
   },
   "dependencies": {
     "bs-node": "github:reasonml-community/bs-node",
     "cookie": "^0.3.1",
+    "encodeurl": "^1.0.2",
+    "esm": "^3.0.30",
+    "filed": "github:RationalJS/filed",
     "follow-redirects": "^1.4.1",
-    "rational-future": "^0.1.0"
+    "fpack": "^0.1.0",
+    "rational-future": "^0.1.0",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "reason-react": "^0.4.1"
   }
 }
