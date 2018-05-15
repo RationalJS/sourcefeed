@@ -21,7 +21,7 @@
     "glob": "^7.1.2",
     "mock-http-server": "github:sourcefeed-io/node-mock-http-server#be3e3a26",
     "nodemon": "^1.17.3",
-    "ospec": "^1.4.1",
+    "ospec": "^2.0.0",
     "wait-on": "^2.1.0"
   },
   "dependencies": {

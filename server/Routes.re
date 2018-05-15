@@ -1,4 +1,5 @@
 exception ServerError(string);
+module Str = Js.String;
 
 type headers = Js.Dict.t(string);
 let emptyHeaders = () => (Js.Dict.empty() : headers);
@@ -162,16 +163,42 @@ module Router = {
     };
   let (|||) = find;
 
-
   let get = (path) => (r : route_context('a, fresh)) =>
-    r.req.method == "GET" && r.req.url == path
+    r.req.method == "GET"
+    && Str.sliceToEnd(~from=Str.length(r.urlMatched), r.req.url) == path
     ? Pass({ ...r, urlMatched: path })
     : Fail;
 
   let prefix = (path) => (r : route_context('a, fresh)) =>
-    Js.String.startsWith(r.urlMatched ++ path, r.req.url)
+    Str.startsWith(r.urlMatched ++ path, r.req.url)
     ? Pass({ ...r, urlMatched: r.urlMatched ++ path })
     : Fail;
+
+  let param = (~re=[%re "/[^/]+/"], setter) => (r) => {
+
+    let match = r.req.url
+    |> Str.sliceToEnd(~from=Str.length(r.urlMatched))
+    |> Js.Re.exec(_, re);
+
+    switch match {
+      | Some(result) =>
+        switch (Js.Re.captures(result) |> Array.get(_, 0) |> Js.Nullable.toOption) {
+          | Some(param) =>
+            /*
+             * Runtime errors are interpreted as a parse failure,
+             * implying the param is invalid.
+             */
+            try(
+              { ...r, urlMatched: r.urlMatched ++ param }
+              |> Middleware.next_assign(_, setter(param))
+            ) {
+              | _ => Fail
+            }
+          | None => Fail
+        }
+      | None => Fail
+    };
+  };
 
   let literal = (content) => Middleware.sendJson'(200, content);
 };

@@ -67,4 +67,57 @@ describe("Basic route matching", () => {
     |> getRes( expectJson(10) );
   });
 
-})
+});
+
+describe("Route primitive composition", () => {
+
+  test("get & prefix (1)", () => {
+    let router = route
+    &&& prefix("/one")
+    &&& get("/two")
+    &&& literal("gp_1")
+    ||| route &&& literal("not found");
+
+    makeReq("GET", "/one/two")
+    |> router
+    |> getRes( expectJson("gp_1") );
+
+    makeReq("GET", "/one")
+    |> router
+    |> getRes( expectJson("not found") );
+  });
+
+  test("get & prefix (2)", () => {
+    let router = route
+    &&& prefix("/one")
+    &&& prefix("/two")
+    &&& get("/three")
+    &&& literal("gp_2")
+    ||| route &&& literal("not found");
+
+    makeReq("GET", "/one/two/three")
+    |> router
+    |> getRes( expectJson("gp_2") );
+
+    makeReq("GET", "/one/two")
+    |> router
+    |> getRes( expectJson("not found") );
+  });
+
+  test("get, prefix, & param", () => {
+    let router = route
+    &&& prefix("/users/")
+    &&& param(paramValue => { "myId": int_of_string(paramValue) })
+    &&& get("/test-route")
+    &&& (r => r |> sendJson'(200, { "id": r.ctx##myId }))
+    ||| route &&& literal("not found");
+
+    makeReq("GET", "/users/123/test-route")
+    |> router
+    |> getRes( expectJson({ "id": 123 }) );
+
+    makeReq("GET", "/users/test-route")
+    |> router
+    |> getRes( expectJson("not found") );
+  });
+});
