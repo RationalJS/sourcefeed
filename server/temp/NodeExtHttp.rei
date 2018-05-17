@@ -446,6 +446,16 @@ module ServerResponse: {
     (
       Js.t(#serverResponse),
       ~status: int,
+      ~headers: Js.Dict.t(string)=?,
+      unit
+    ) =>
+    unit =
+    "";
+  [@bs.send]
+  external writeHeadWithStatusMessage :
+    (
+      Js.t(#serverResponse),
+      ~status: int,
       ~message: string=?,
       ~headers: Js.Dict.t(string)=?,
       unit
