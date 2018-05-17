@@ -6,6 +6,10 @@ let getPath = NodePath.join2(NodeGlobal.__dirname);
 
 let routes =
 route
+&&& get("/assets/style.css")
+&&& AeroLess.file("../client/css/tachyons/tachyons.less" |> getPath)
+
+||| route
 &&& prefix("/assets")
 &&& AeroStatic.dir("../client/build" |> getPath)
 

@@ -1,14 +1,15 @@
 exception ServerError(string);
 module Str = Js.String;
 
-type headers = Js.Dict.t(string);
-let emptyHeaders = () => (Js.Dict.empty() : headers);
+type req_headers = Js.Dict.t(string);
+type headers = Belt.Map.String.t(string);
+let emptyHeaders = () => Belt.Map.String.empty;
 
 type endpoint = { end_: bool }; /* Dummy type to indicate endpoint */
 let endpoint = { end_: true }; /* Dummy type to indicate endpoint */
 
 type req = {
-  headers: headers,
+  headers: req_headers,
   method: string,
   url: string
 };
@@ -70,6 +71,27 @@ module Middleware = {
     {
       ...r,
       res: ResWithStatus(code, headers)
+    }
+  };
+
+  let setHeader = (key, value, r) => {
+    let set = h => Belt.Map.String.set(h,key,value);
+    {
+      ...r,
+      res: switch(r.res) {
+        | ResFresh(headers) => ResFresh(set(headers))
+      }
+    }
+  };
+
+  let getHeader = (type state, key, r : route_context('a,state)) => {
+    let get = h => Belt.Map.String.get(h,key);
+    switch(r.res) {
+      | ResFresh(headers) => get(headers)
+      | ResWithStatus(_, headers) => get(headers)
+      | ResWithHeadersSent(_, headers) => get(headers)
+      | ReqResStream(_) => None
+      | ResEnded(_,_,headers,_) => get(headers)
     }
   };
 

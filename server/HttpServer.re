@@ -63,6 +63,14 @@ let makeRouteContextLiteral = (method_, url, headers) => {
   urlMatched: "",
 };
 
+let renderHeaders = (headers) => {
+  let result = (Js.Dict.empty() : Js.Dict.t(string));
+  Belt.Map.String.forEach(headers, (key, value) => {
+    Js.Dict.set(result, key, value)
+  });
+  result
+};
+
 let create = (routes) =>
   NodeExtHttp.createServer( (req, res) => {
     Js.log(Req.getMethod(req) ++ " " ++ Req.getUrl(req));
@@ -74,7 +82,7 @@ let create = (routes) =>
         | Halt({ res: ResEnded(headersSent, status_code, headers, body) }) =>
           if ( ! headersSent ) {
             res
-            |. Res.writeHead(~status=status_code, ~headers=headers, ());
+            |. Res.writeHead(~status=status_code, ~headers=renderHeaders(headers), ());
           };
           switch(body) {
             | Some(content) => res |. WS.writeString(~data=content, ()) |> ignore
@@ -87,14 +95,14 @@ let create = (routes) =>
           |. NodeExtHttp.NodeExtStream.ReadableStream.pipe(res)
           |> ignore
         | Fail =>
-          res |. Res.writeHead(~status=404, ~headers=emptyHeaders(), ());
+          res |. Res.writeHead(~status=404, ~headers=renderHeaders(emptyHeaders()), ());
           res |. WS.writeString("No such route: " ++ Req.getMethod(req) ++ " " ++ Req.getUrl(req), ());
           res |. WS.endStream
         /*| Async(SendHeaders) => TODO */
         | Async(future) =>
           future |> Future.get(execute)
         | other =>
-          res |. Res.writeHead(~status=500, ~headers=emptyHeaders(), ());
+          res |. Res.writeHead(~status=500, ~headers=renderHeaders(emptyHeaders()), ());
           Js.log("Invalid response: " ++ print_handler_action(other));
           res |. WS.writeString("Internal server error", ());
           res |. WS.endStream

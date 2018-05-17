@@ -5,6 +5,8 @@ exception AssertionError(string);
 
 let stringify = (value) => Js.Json.stringifyAny(value) |> Belt.Option.getExn;
 
+let getTestPath = Node.Path.join2(BsNode.NodeGlobal.__dirname);
+
 let makeReq = (~headers=Js.Dict.empty(), method_, url) =>
   HttpServer.makeRouteContextLiteral(method_, url, headers);
 
@@ -27,18 +29,30 @@ let expectJson = (expected, actual) => switch(actual) {
     raise(AssertionError("Response did not end"))
 };
 
-let expectHtml = (expected, actual) => switch(actual) {
-  | Halt({ res: ResEnded(_,_, headers, body) }) =>
-    headers |> Js.Dict.unsafeGet(_, "content-type") |> equals("text/html");
+let expectBody = (~headers=Js.Obj.empty(), expected, actual) => switch(actual) {
+  | Halt({ res: ResEnded(_,_,_, body) } as r) =>
+
+    let checkHeader = (k) =>
+      r |> Middleware.getHeader(k) |> Belt.Option.getExn |> equals([%raw "headers[k]"]);
+
+    Js.Obj.keys(headers)
+    |> Array.map(k => checkHeader(k));
+
     switch(body) {
       | Some(body) =>
         body |> equals(expected)
       | None =>
-        raise(AssertionError("Response did not send an html body"))
+        raise(AssertionError("Response did not send a body"))
     }
   | _ =>
     raise(AssertionError("Response did not end"))
 };
+
+let expectHtml = (expected, actual) =>
+  try( expectBody(~headers={ "content-type": "text/html" }, expected, actual) ) {
+    | AssertionError("Response did not send a body") =>
+      raise(AssertionError("Response did not send an html body"))
+  };
 
 type timeoutId;
 [@bs.val] [@bs.val] external setTimeout : ([@bs.uncurry] (unit => unit), int) => timeoutId = "";
